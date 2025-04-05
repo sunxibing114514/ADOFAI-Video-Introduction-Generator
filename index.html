@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>ADOFAI视频简介生成</title>
+    <style>
+    @font-face {
+      font-family: 'PingFang SC';
+      src: url('PingFang-Regular.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -moz-user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      -khtml-user-select: none;
+      user-select: none;
+    }
+    body {
+      background: #f0f0f0;
+      padding: 20px;
+      font-family: 'PingFang SC',Helvetica,Arial,sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .window {
+      width: 400px;
+      height: 600px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,.2);
+      background-color: #fff;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .title-bar {
+      height: 40px;
+      background-color: #f6f6f6;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      padding: 10px;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      align-items: center;
+    }
+    .title-bar .buttons {
+      display: flex;
+      gap: 6px;
+    }
+    .title-bar .button {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .close { background-color: #ff5f56; }
+    .minimize { background-color: #ffbd2e; }
+    .maximize { background-color: #28c940; }
+
+    .content {
+      padding: 20px;
+      flex: 1;
+      overflow: auto;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    input[type="text"], textarea {
+      background: transparent;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 8px 12px;
+      width: 240px;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    input[type="text"]:focus, textarea:focus {
+      outline: none;
+      border-color: #007AFF;
+      box-shadow: 0 0 0 2px rgba(0,122,255,0.1);
+    }
+    textarea {
+      height: 80px;
+      resize: vertical;
+    }
+
+    .switch-btn {
+      width: 50px;
+      height: 25px;
+      background: #e0e0e0;
+      border-radius: 25px;
+      position: relative;
+      transition: all 0.3s;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .switch-btn::before {
+      content: '';
+      width: 21px;
+      height: 21px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      left: 2px;
+      top: 2px;
+      transition: all 0.3s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .switch-btn.active {
+      background: #007AFF;
+    }
+    .switch-btn.active::before {
+      left: 27px;
+    }
+
+    .action-btn {
+      background: #007AFF;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .action-btn:hover {
+      background: #0063cc;
+    }
+
+    #output {
+      white-space: pre-wrap;
+      background: #f8f8f8;
+      padding: 15px;
+      border-radius: 4px;
+      min-height: 200px;
+      font-family: monospace;
+      border: 1px solid #e0e0e0;
+      overflow: auto;
+      flex: 1;
+    }
+    </style>
+</head>
+<body>
+    <div class="window">
+        <div class="title-bar">
+            <div class="buttons">
+                <div class="button close"></div>
+                <div class="button minimize"></div>
+                <div class="button maximize"></div>
+            </div>
+        </div>
+        <div class="content">
+            <div class="form-group">
+                <input type="text" id="separator" value="—————————">
+                <label>分隔符</label>
+            </div>
+
+            <div class="form-group">
+                <div class="switch-btn active"></div>
+                <input type="text" id="keyboard" placeholder="键盘">
+            </div>
+            <div class="form-group">
+                <div class="switch-btn active"></div>
+                <input type="text" id="playtime" placeholder="游戏时长">
+            </div>
+            <div class="form-group">
+                <div class="switch-btn active"></div>
+                <input type="text" id="mod" placeholder="MOD">
+            </div>
+
+            <div class="form-group">
+                <div class="switch-btn active"></div>
+                <input type="text" id="songname" placeholder="曲名">
+            </div>
+            <div class="form-group">
+                <div class="switch-btn active"></div>
+                <input type="text" id="artist" placeholder="曲师">
+            </div>
+            <div class="form-group">
+                <div class="switch-btn active"></div>
+                <input type="text" id="mapper" placeholder="谱师">
+            </div>
+            <div class="form-group">
+                <div class="switch-btn active"></div>
+                <input type="text" id="judgement" placeholder="判定">
+            </div>
+            <div class="form-group">
+                <div class="switch-btn active"></div>
+                <input type="text" id="forumlevel" placeholder="论坛等级">
+            </div>
+            <div class="form-group">
+                <div class="switch-btn active"></div>
+                <input type="text" id="feellevel" placeholder="体感等级">
+            </div>
+            <div class="form-group">
+                <div class="switch-btn active"></div>
+                <input type="text" id="perfectlevel" placeholder="完美无瑕等级">
+            </div>
+            <div class="form-group">
+                <div class="switch-btn active"></div>
+                <input type="text" id="xaccuracy" placeholder="X-精准度">
+            </div>
+            <div class="form-group">
+                <div class="switch-btn active"></div>
+                <input type="text" id="download" placeholder="下载链接">
+            </div>
+            <div class="form-group">
+                <div class="switch-btn active"></div>
+                <textarea id="message" placeholder="想说的话"></textarea>
+            </div>
+            
+            <button class="action-btn" onclick="generateProfile()" style="margin-top: 20px;">生成简介</button>
+        </div>
+    </div>
+
+    <div class="window" style="width: 500px;">
+        <div class="title-bar">
+            <div class="buttons">
+                <div class="button close"></div>
+                <div class="button minimize"></div>
+                <div class="button maximize"></div>
+            </div>
+        </div>
+        <div class="content" style="display: flex; flex-direction: column; gap: 15px;">
+            <pre id="output"></pre>
+            <div style="display: flex; gap: 10px;">
+                <button class="action-btn" onclick="copyText()">复制文本</button>
+                <button class="action-btn" onclick="downloadText()">下载文件</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.querySelectorAll('.switch-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            this.classList.toggle('active');
+        });
+    });
+
+    const fieldLabels = {
+        keyboard: "键盘",
+        playtime: "游戏时长",
+        mod: "MOD",
+        songname: "曲名",
+        artist: "曲师",
+        mapper: "谱师",
+        judgement: "判定",
+        forumlevel: "论坛等级",
+        feellevel: "体感等级",
+        perfectlevel: "完美无瑕等级",
+        xaccuracy: "X-精准度",
+        download: "下载链接",
+        message: "想说的话"
+    };
+
+    function getValue(id) {
+        const container = document.getElementById(id).parentElement;
+        const switchBtn = container.querySelector('.switch-btn');
+        const input = document.getElementById(id);
+        
+        if (!switchBtn.classList.contains('active') || !input.value.trim()) return null;
+        
+        return id === 'message' 
+            ? input.value.trim()
+            : `${fieldLabels[id]}：${input.value.trim()}`;
+    }
+
+    function generateProfile() {
+        const sections = [];
+        const separator = document.getElementById('separator').value;
+
+        const part1 = [
+            getValue('keyboard'),
+            getValue('playtime'),
+            getValue('mod')
+        ].filter(Boolean);
+
+        const part2 = [
+            getValue('songname'),
+            getValue('artist'),
+            getValue('mapper'),
+            getValue('judgement'),
+            getValue('forumlevel'),
+            getValue('feellevel'),
+            getValue('perfectlevel'),
+            getValue('xaccuracy')
+        ].filter(Boolean);
+
+        const part3 = getValue('download');
+        const message = getValue('message');
+
+        if(part1.length) sections.push(part1.join('\n'));
+        if(part2.length) sections.push(part2.join('\n'));
+        if(part3) sections.push(part3);
+        if(message) sections.push(message);
+
+        document.getElementById('output').textContent = sections.join('\n' + separator + '\n');
+    }
+
+    function copyText() {
+        const text = document.getElementById('output').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            alert("内容已复制到剪贴板");
+        });
+    }
+
+    function downloadText() {
+        const text = document.getElementById('output').textContent;
+        const blob = new Blob([text], {type: 'text/plain;charset=utf-8'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ADOFAI配置_${new Date().toISOString().slice(0,10)}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+    </script>
+</body>
+</html>
